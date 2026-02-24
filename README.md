@@ -6,15 +6,13 @@ A Go CLI for the Webdoc EMR REST API.
 
 ```
 webdoc-cli/
-├── src/
-│   ├── cmd/
-│   │   └── webdoc/
-│   │       └── main.go          # Entry point + command tree
-│   ├── internal/
-│   │   └── config/
-│   │       └── config.go        # Config persistence + URL resolution
-│   ├── go.mod
-│   └── go.sum
+├── cmd/
+│   └── webdoc/
+│       └── main.go          # Entry point + command tree
+├── internal/
+│   └── config/
+│       └── config.go        # Config persistence + URL resolution
+├── go.mod
 └── README.md
 ```
 
@@ -22,13 +20,13 @@ webdoc-cli/
 
 ```bash
 # Install dependencies
-cd src && go mod tidy
+go mod tidy
 
 # Run directly
-go run src/cmd/webdoc/main.go --help
+go run cmd/webdoc/main.go --help
 
 # Build a binary
-go build -o webdoc ./src/cmd/webdoc
+go build -o webdoc ./cmd/webdoc
 ```
 
 ## Usage
