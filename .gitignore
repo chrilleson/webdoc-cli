@@ -1,0 +1,27 @@
+
+# Build output
+webdoc
+webdoc.exe
+dist/
+
+# Archives
+*.tar.gz
+*.zip
+
+# Go toolchain
+vendor/
+
+# Config with credentials — NEVER commit this
+# Your token and client secret live here after `auth login`
+config.json
+**/webdoc/config.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
