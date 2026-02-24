@@ -1,4 +1,4 @@
-module github.com/yourname/webdoc-cli
+module github.com/chrilleson/webdoc-cli
 
 go 1.22
 

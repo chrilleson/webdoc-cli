@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // Config holds all persisted CLI settings.
 // Think of this as a plain DTO / record in C#.
 type Config struct {
-	BaseURL string `json:"base_url"`
+	BaseURL     string    `json:"base_url"`
+	AccessToken string    `json:"access_token,omitempty"`
+	TokenExpiry time.Time `json:"token_expiry,omitempty`
 	// We'll add token fields here later (Step 4)
 }
 
@@ -59,7 +62,7 @@ func (c *Config) Save() error {
 
 	// Create ~/.config/webdoc/ if it doesn't exist
 	// 0755 = rwxr-xr-x (owner can read/write/execute, others can read/execute)
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("could not create config directory: %w", err)
 	}
 
@@ -69,7 +72,7 @@ func (c *Config) Save() error {
 	}
 
 	// 0600 = rw------- (only owner can read/write — important for credentials)
-	if err := os.WriteFile(path, data, 0600); err != nil {
+	if err := os.WriteFile(path, data, 0o600); err != nil {
 		return fmt.Errorf("could not write config file: %w", err)
 	}
 
@@ -88,4 +91,8 @@ func ResolveBaseURL(flagValue string, cfg *Config) (string, error) {
 	return "", errors.New(
 		"no base URL configured — run `webdoc config set-url <url>` or pass --url",
 	)
+}
+
+func (c *Config) IsTokenValid() bool {
+	return c.AccessToken != "" && time.Now().Before(c.TokenExpiry.Add(-30*time.Second))
 }
