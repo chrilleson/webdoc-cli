@@ -26,7 +26,7 @@ func main() {
 		Short: "Authenticate with the Webdoc API",
 	}
 
-	var clientID, clientSecret string
+	var clientID, clientSecret, scope string
 	loginCmd := &cobra.Command{
 		Use:   "login",
 		Short: "Obtain and cache an OAuth2 access token",
@@ -39,8 +39,8 @@ func main() {
 			if err != nil {
 				return err
 			}
-			if err := auth.Login(baseURL, clientID, clientSecret); err != nil {
-				return nil
+			if err := auth.Login(baseURL, clientID, clientSecret, scope); err != nil {
+				return err
 			}
 			fmt.Println("Login successful")
 			return nil
@@ -48,6 +48,7 @@ func main() {
 	}
 	loginCmd.Flags().StringVar(&clientID, "client-id", "", "OAuth2 client ID (required)")
 	loginCmd.Flags().StringVar(&clientSecret, "client-secret", "", "OAuth2 client secret (required)")
+	loginCmd.Flags().StringVar(&scope, "scope", "self-service", "OAuth2 scopes (space-separated)")
 	loginCmd.MarkFlagRequired("client-id")
 	loginCmd.MarkFlagRequired("client-secret")
 
