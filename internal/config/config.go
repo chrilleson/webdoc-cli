@@ -14,7 +14,7 @@ import (
 type Config struct {
 	BaseURL     string    `json:"base_url"`
 	AccessToken string    `json:"access_token,omitempty"`
-	TokenExpiry time.Time `json:"token_expiry,omitempty`
+	TokenExpiry time.Time `json:"token_expiry,omitempty"`
 	// We'll add token fields here later (Step 4)
 }
 

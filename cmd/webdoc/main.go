@@ -40,7 +40,7 @@ func main() {
 				return err
 			}
 			if err := auth.Login(baseURL, clientID, clientSecret); err != nil {
-				return nil
+				return err
 			}
 			fmt.Println("Login successful")
 			return nil
