@@ -9,18 +9,12 @@ import (
 	"time"
 )
 
-// Config holds all persisted CLI settings.
-// Think of this as a plain DTO / record in C#.
 type Config struct {
 	BaseURL     string    `json:"base_url"`
 	AccessToken string    `json:"access_token,omitempty"`
 	TokenExpiry time.Time `json:"token_expiry,omitempty"`
-	// We'll add token fields here later (Step 4)
 }
 
-// configFilePath returns the path to the config file.
-// On Linux/macOS: ~/.config/webdoc/config.json
-// On Windows:     %APPDATA%\webdoc\config.json
 func configFilePath() (string, error) {
 	dir, err := os.UserConfigDir()
 	if err != nil {
@@ -29,8 +23,6 @@ func configFilePath() (string, error) {
 	return filepath.Join(dir, "webdoc", "config.json"), nil
 }
 
-// Load reads the config file from disk.
-// Returns an empty Config (not an error) if the file doesn't exist yet.
 func Load() (*Config, error) {
 	path, err := configFilePath()
 	if err != nil {
@@ -53,14 +45,12 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
-// Save writes the config to disk, creating directories if needed.
 func (c *Config) Save() error {
 	path, err := configFilePath()
 	if err != nil {
 		return err
 	}
 
-	// Create ~/.config/webdoc/ if it doesn't exist
 	// 0755 = rwxr-xr-x (owner can read/write/execute, others can read/execute)
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("could not create config directory: %w", err)
@@ -79,8 +69,6 @@ func (c *Config) Save() error {
 	return nil
 }
 
-// ResolveBaseURL returns the flag value if set, otherwise falls back to config.
-// This is the "flag wins" part of your design decision.
 func ResolveBaseURL(flagValue string, cfg *Config) (string, error) {
 	if flagValue != "" {
 		return flagValue, nil
