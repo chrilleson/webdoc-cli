@@ -5,8 +5,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/chrilleson/webdoc-cli/internal/api"
 	"github.com/chrilleson/webdoc-cli/internal/auth"
 	"github.com/chrilleson/webdoc-cli/internal/config"
+	"github.com/chrilleson/webdoc-cli/internal/httpclient"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +23,7 @@ func main() {
 	// --url flag available on ALL subcommands
 	rootCmd.PersistentFlags().StringVar(&urlFlag, "url", "", "Override base URL (e.g. https://test.clinic.webdoc.com)")
 
+	// -- auth --------------------------------------------------
 	authCmd := &cobra.Command{
 		Use:   "auth",
 		Short: "Authenticate with the Webdoc API",
@@ -69,13 +72,13 @@ func main() {
 		},
 	}
 
-	// `webdoc config` group
+	// -- config ------------------------------------------------------
+
 	configCmd := &cobra.Command{
 		Use:   "config",
 		Short: "Manage CLI configuration",
 	}
 
-	// `webdoc config set-url <url>`
 	setURLCmd := &cobra.Command{
 		Use:   "set-url <url>",
 		Short: "Set and persist the Webdoc base URL",
@@ -94,7 +97,6 @@ func main() {
 		},
 	}
 
-	// `webdoc config show`
 	showConfigCmd := &cobra.Command{
 		Use:   "show",
 		Short: "Show current configuration",
@@ -112,38 +114,57 @@ func main() {
 		},
 	}
 
-	// Placeholder commands — we'll flesh these out in later steps
-	patientsCmd := &cobra.Command{
-		Use:   "patients",
-		Short: "Manage patients",
+	// -- booking types -----------------------------------------------------
+	bookingTypesCmd := &cobra.Command{
+		Use:   "booking-types",
+		Short: "Manage booking types",
+	}
+
+	bookingTypesList := &cobra.Command{
+		Use:   "list",
+		Short: "List all booking types",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := config.Load()
+			client, err := httpclient.FromConfig(urlFlag)
 			if err != nil {
 				return err
 			}
-			url, err := config.ResolveBaseURL(urlFlag, cfg)
+
+			bookingTypes, err := api.GetBookingTypes(client)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("patients command — base URL: %s\n", url)
+
+			if len(bookingTypes) == 0 {
+				fmt.Println("No booking types found")
+				return nil
+			}
+
+			for _, bt := range bookingTypes {
+				fmt.Printf("%-4s %s", bt.ID, bt.Name)
+				if bt.ExternallyVisibleName != bt.Name {
+					fmt.Printf(" (%s)", bt.ExternallyVisibleName)
+				}
+				if bt.HasSelfService {
+					fmt.Print(" [self-service]")
+				}
+
+				fmt.Println()
+			}
+
 			return nil
 		},
 	}
 
-	bookingsCmd := &cobra.Command{
-		Use:   "bookings",
-		Short: "Manage bookings and calendar",
-	}
-
-	documentsCmd := &cobra.Command{
-		Use:   "documents",
-		Short: "Manage documents",
-	}
-
-	// Assemble the command tree
+	// -- assemble tree ------------------------------------------------------
 	authCmd.AddCommand(loginCmd, authStatusCmd)
 	configCmd.AddCommand(setURLCmd, showConfigCmd)
-	rootCmd.AddCommand(authCmd, configCmd, patientsCmd, bookingsCmd, documentsCmd)
+	bookingTypesCmd.AddCommand(bookingTypesList)
+
+	rootCmd.AddCommand(
+		authCmd,
+		configCmd,
+		bookingTypesCmd,
+	)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
