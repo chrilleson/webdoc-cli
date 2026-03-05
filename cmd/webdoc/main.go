@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	var urlFlag string
+	var apiURLFlag string
 
 	rootCmd := &cobra.Command{
 		Use:   "webdoc",
@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// --url flag available on ALL subcommands
-	rootCmd.PersistentFlags().StringVar(&urlFlag, "url", "", "Override base URL (e.g. https://test.clinic.webdoc.com)")
+	rootCmd.PersistentFlags().StringVar(&apiURLFlag, "url", "", "Override API base URL")
 
 	// -- auth --------------------------------------------------
 	authCmd := &cobra.Command{
@@ -38,11 +38,11 @@ func main() {
 			if err != nil {
 				return err
 			}
-			baseURL, err := config.ResolveBaseURL(urlFlag, cfg)
+			authURL, err := config.ResolveAuthURL("", cfg)
 			if err != nil {
 				return err
 			}
-			if err := auth.Login(baseURL, clientID, clientSecret, scope); err != nil {
+			if err := auth.Login(authURL, clientID, clientSecret, scope); err != nil {
 				return err
 			}
 			fmt.Println("Login successful")
@@ -79,20 +79,38 @@ func main() {
 		Short: "Manage CLI configuration",
 	}
 
-	setURLCmd := &cobra.Command{
-		Use:   "set-url <url>",
-		Short: "Set and persist the Webdoc base URL",
+	setAuthURLCmd := &cobra.Command{
+		Use:   "set-auth-url <url>",
+		Short: "Set and persist the Webdoc auth URL (e.g. https://auth-integration.carasent.net)",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.Load()
 			if err != nil {
 				return err
 			}
-			cfg.BaseURL = args[0]
+			cfg.AuthURL = args[0]
 			if err := cfg.Save(); err != nil {
 				return err
 			}
-			fmt.Printf("Base URL saved: %s\n", args[0])
+			fmt.Printf("Auth URL saved: %s\n", args[0])
+			return nil
+		},
+	}
+
+	setAPIURLCmd := &cobra.Command{
+		Use:   "set-api-url <url>",
+		Short: "Set and persist the Webdoc API URL (e.g. https://api.atlan.se)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg, err := config.Load()
+			if err != nil {
+				return err
+			}
+			cfg.APIURL = args[0]
+			if err := cfg.Save(); err != nil {
+				return err
+			}
+			fmt.Printf("API URL saved: %s\n", args[0])
 			return nil
 		},
 	}
@@ -105,11 +123,16 @@ func main() {
 			if err != nil {
 				return err
 			}
-			if cfg.BaseURL == "" {
-				fmt.Println("base_url: (not set)")
-			} else {
-				fmt.Printf("base_url: %s\n", cfg.BaseURL)
+			authURL := cfg.AuthURL
+			if authURL == "" {
+				authURL = "(not set)"
 			}
+			apiURL := cfg.APIURL
+			if apiURL == "" {
+				apiURL = "(not set)"
+			}
+			fmt.Printf("auth_url: %s\n", authURL)
+			fmt.Printf("api_url:  %s\n", apiURL)
 			return nil
 		},
 	}
@@ -124,7 +147,7 @@ func main() {
 		Use:   "list",
 		Short: "List all booking types",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := httpclient.FromConfig(urlFlag)
+			client, err := httpclient.FromConfig(apiURLFlag)
 			if err != nil {
 				return err
 			}
@@ -157,7 +180,7 @@ func main() {
 
 	// -- assemble tree ------------------------------------------------------
 	authCmd.AddCommand(loginCmd, authStatusCmd)
-	configCmd.AddCommand(setURLCmd, showConfigCmd)
+	configCmd.AddCommand(setAuthURLCmd, setAPIURLCmd, showConfigCmd)
 	bookingTypesCmd.AddCommand(bookingTypesList)
 
 	rootCmd.AddCommand(

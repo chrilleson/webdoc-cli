@@ -11,6 +11,8 @@ import (
 
 type Config struct {
 	BaseURL     string    `json:"base_url"`
+	AuthURL     string    `json:"auth_url"`
+	APIURL      string    `json:"api_url"`
 	AccessToken string    `json:"access_token,omitempty"`
 	TokenExpiry time.Time `json:"token_expiry,omitempty"`
 }
@@ -69,16 +71,30 @@ func (c *Config) Save() error {
 	return nil
 }
 
-func ResolveBaseURL(flagValue string, cfg *Config) (string, error) {
+func ResolveAuthURL(flagValue string, cfg *Config) (string, error) {
+	resolvedAuthURL, err := ResolveURL(cfg.AuthURL, flagValue)
+	if err != nil {
+		return "", errors.New("no auth URL configured - run `webdoc config set-auth-url <url>`")
+	}
+	return resolvedAuthURL, nil
+}
+
+func ResolveAPIURL(flagValue string, cfg *Config) (string, error) {
+	resolvedAuthURL, err := ResolveURL(cfg.APIURL, flagValue)
+	if err != nil {
+		return "", errors.New("no API URL configured - run `webdoc config set-api-url <url>`")
+	}
+	return resolvedAuthURL, nil
+}
+
+func ResolveURL(url, flagValue string) (string, error) {
 	if flagValue != "" {
 		return flagValue, nil
 	}
-	if cfg.BaseURL != "" {
-		return cfg.BaseURL, nil
+	if url != "" {
+		return url, nil
 	}
-	return "", errors.New(
-		"no base URL configured — run `webdoc config set-url <url>` or pass --url",
-	)
+	return "", errors.New("no URL configured")
 }
 
 func (c *Config) IsTokenValid() bool {

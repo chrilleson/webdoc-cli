@@ -18,11 +18,11 @@ type tokenResponse struct {
 	TokenType   string `json:"token_type"`
 }
 
-func Login(baseURL, clientID, clientSecret, scope string) error {
+func Login(authURL, clientID, clientSecret, scope string) error {
 	if !strings.Contains(scope, "self-service") {
 		scope = "self-service " + scope
 	}
-	tokenURL := strings.TrimRight(baseURL, "/") + "/oauth/token"
+	tokenURL := strings.TrimRight(authURL, "/") + "/oauth/token"
 
 	form := url.Values{}
 	form.Set("grant_type", "client_credentials")

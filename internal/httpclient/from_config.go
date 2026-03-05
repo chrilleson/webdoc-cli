@@ -5,13 +5,13 @@ import (
 	"github.com/chrilleson/webdoc-cli/internal/config"
 )
 
-func FromConfig(urlFlag string) (*Client, error) {
+func FromConfig(apiURLFlag string) (*Client, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, err
 	}
 
-	baseURL, err := config.ResolveBaseURL(urlFlag, cfg)
+	apiURL, err := config.ResolveAPIURL(apiURLFlag, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -21,5 +21,5 @@ func FromConfig(urlFlag string) (*Client, error) {
 		return nil, err
 	}
 
-	return New(baseURL, token), nil
+	return New(apiURL, token), nil
 }
