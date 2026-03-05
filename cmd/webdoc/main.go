@@ -178,15 +178,53 @@ func main() {
 		},
 	}
 
+	// -- users --------------------------------------------------------------`json:
+	usersCmd := &cobra.Command{
+		Use:   "users",
+		Short: "Manage users",
+	}
+
+	usersSearchCmd := &cobra.Command{
+		Use:   "search <personalNumber>",
+		Short: "Search for a user by personalNumber",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := httpclient.FromConfig(apiURLFlag)
+			if err != nil {
+				return err
+			}
+
+			users, err := api.SearchUsers(client, args[0])
+			if err != nil {
+				return nil
+			}
+
+			if len(users) == 0 {
+				fmt.Println("No users found")
+				return nil
+			}
+
+			for _, u := range users {
+				fmt.Printf("%s %s %s (%s)", u.ID, u.FirstName, u.LastName, u.PersonalNumber)
+				for _, c := range u.Clinics {
+					fmt.Printf("  └─ %s  %s\n", c.ID, c.Name)
+				}
+			}
+
+			return nil
+		},
+	}
+
 	// -- assemble tree ------------------------------------------------------
 	authCmd.AddCommand(loginCmd, authStatusCmd)
 	configCmd.AddCommand(setAuthURLCmd, setAPIURLCmd, showConfigCmd)
 	bookingTypesCmd.AddCommand(bookingTypesList)
+	usersCmd.AddCommand(usersSearchCmd)
 
 	rootCmd.AddCommand(
 		authCmd,
 		configCmd,
 		bookingTypesCmd,
+		usersCmd,
 	)
 
 	if err := rootCmd.Execute(); err != nil {
