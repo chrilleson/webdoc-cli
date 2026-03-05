@@ -1,6 +1,6 @@
 # webdoc-cli
 
-A Go CLI for the Webdoc EMR REST API.
+A Go CLI for the Webdoc REST API.
 
 ## Project Structure
 
@@ -8,11 +8,19 @@ A Go CLI for the Webdoc EMR REST API.
 webdoc-cli/
 ├── cmd/
 │   └── webdoc/
-│       └── main.go          # Entry point + command tree
+│       └── main.go                  # Entry point + command tree
 ├── internal/
-│   └── config/
-│       └── config.go        # Config persistence + URL resolution
+│   ├── api/
+│   │   └── bookingtypes.go          # Booking type models + API call
+│   ├── auth/
+│   │   └── auth.go                  # OAuth2 client credentials login + token validation
+│   ├── config/
+│   │   └── config.go                # Config persistence + URL resolution
+│   └── httpclient/
+│       ├── client.go                # Generic HTTP client (Get/Post/Patch)
+│       └── from_config.go           # Client factory from saved config + token
 ├── go.mod
+├── go.sum
 └── README.md
 ```
 
@@ -51,17 +59,3 @@ webdoc patients --url https://prod.yourclinic.webdoc.com
 | Windows | `%APPDATA%\webdoc\config.json`            |
 
 The config file is saved with `0600` permissions (owner read/write only).
-
-## Steps Completed
-
-- [x] Step 1 — Project setup, modules, entry point
-- [x] Step 2 & 3 — Cobra command tree + config system with URL resolution
-
-## Next Steps
-
-- [ ] Step 4 — OAuth 2.0 token fetch (`webdoc auth login`)
-- [ ] Step 5 — Token caching with expiry
-- [ ] Step 6 — `patients list` / `patients get`
-- [ ] Step 7 — `bookings list` with date flags
-- [ ] Step 8 — `documents list`
-- [ ] Step 9 — Pretty table output
