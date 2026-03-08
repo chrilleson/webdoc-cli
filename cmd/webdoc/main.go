@@ -214,17 +214,65 @@ func main() {
 		},
 	}
 
+	// -- patients -----------------------------------------------------------
+	patientsCmd := &cobra.Command{
+		Use:   "patients",
+		Short: "Manage patients",
+	}
+
+	patientsSearchCmd := &cobra.Command{
+		Use:   "search <personalNumber>",
+		Short: "Search for a patient by personal number",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := httpclient.FromConfig(apiURLFlag)
+			if err != nil {
+				return err
+			}
+
+			patients, err := api.GetPatients(client, args[0])
+			if err != nil {
+				return err
+			}
+
+			if len(patients) == 0 {
+				fmt.Println("No patients found.")
+				return nil
+			}
+
+			for _, p := range patients {
+				fmt.Printf("%s  %s %s  (%s)\n", p.ID, p.FirstName, p.LastName, p.PersonalNumber)
+				fmt.Printf("  Born: %s  Gender: %s  Nationality: %s\n", p.BirthDate, p.Gender, p.Nationality)
+				fmt.Printf("  Address: %s, %s %s\n", p.Address.StreetName, p.Address.ZipCode, p.Address.City)
+				if p.Email != "" {
+					fmt.Printf("  Email: %s\n", p.Email)
+				}
+				if p.MobilePhoneNumber != "" {
+					fmt.Printf("  Mobile: %s\n", p.MobilePhoneNumber)
+				}
+				fmt.Printf("  Patient type: %s (%s)\n", p.PatientType.Name, p.PatientType.Type)
+				if p.Organization != nil {
+					fmt.Printf("  Organization: %s\n", p.Organization.Name)
+				}
+			}
+
+			return nil
+		},
+	}
+
 	// -- assemble tree ------------------------------------------------------
 	authCmd.AddCommand(loginCmd, authStatusCmd)
 	configCmd.AddCommand(setAuthURLCmd, setAPIURLCmd, showConfigCmd)
 	bookingTypesCmd.AddCommand(bookingTypesList)
 	usersCmd.AddCommand(usersSearchCmd)
+	patientsCmd.AddCommand(patientsSearchCmd)
 
 	rootCmd.AddCommand(
 		authCmd,
 		configCmd,
 		bookingTypesCmd,
 		usersCmd,
+		patientsCmd,
 	)
 
 	if err := rootCmd.Execute(); err != nil {
