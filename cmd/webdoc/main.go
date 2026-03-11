@@ -204,7 +204,7 @@ func main() {
 			}
 
 			for _, u := range users {
-				fmt.Printf("%s %s %s (%s)", u.ID, u.FirstName, u.LastName, u.PersonalNumber)
+				fmt.Printf("%s %s %s (%s)\n", u.ID, u.FirstName, u.LastName, u.PersonalNumber)
 				for _, c := range u.Clinics {
 					fmt.Printf("  └─ %s  %s\n", c.ID, c.Name)
 				}
@@ -315,12 +315,73 @@ func main() {
 	patientsCreateCmd.MarkFlagRequired("county-name")
 	patientsCreateCmd.MarkFlagRequired("patient-type")
 
+	// -- patient-types ------------------------------------------------------
+
+	patientTypesCmd := &cobra.Command{
+		Use:   "patient-types",
+		Short: "List and inspect patient types",
+	}
+
+	patientTypesListCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all patient types",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := httpclient.FromConfig(apiURLFlag)
+			if err != nil {
+				return err
+			}
+
+			name, _ := cmd.Flags().GetString("name")
+			patientType, _ := cmd.Flags().GetString("type")
+
+			types, err := api.ListPatientTypes(client, name, patientType)
+			if err != nil {
+				return err
+			}
+
+			if len(types) == 0 {
+				fmt.Println("No patient types found.")
+				return nil
+			}
+
+			for _, t := range types {
+				fmt.Printf("%-4s  %-30s  %s\n", t.ID, t.Name, t.Type)
+			}
+
+			return nil
+		},
+	}
+	patientTypesListCmd.Flags().String("name", "", "Filter by name")
+	patientTypesListCmd.Flags().String("type", "", "Filter by type (e.g. private, insurance, healthcare_contract)")
+
+	patientTypesGetCmd := &cobra.Command{
+		Use:   "get <id>",
+		Short: "Get a patient type by ID",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := httpclient.FromConfig(apiURLFlag)
+			if err != nil {
+				return err
+			}
+
+			t, err := api.GetPatientType(client, args[0])
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%-4s  %-30s  %s\n", t.ID, t.Name, t.Type)
+
+			return nil
+		},
+	}
+
 	// -- assemble tree ------------------------------------------------------
 	authCmd.AddCommand(loginCmd, authStatusCmd)
 	configCmd.AddCommand(setAuthURLCmd, setAPIURLCmd, showConfigCmd)
 	bookingTypesCmd.AddCommand(bookingTypesList)
 	usersCmd.AddCommand(usersSearchCmd)
 	patientsCmd.AddCommand(patientsSearchCmd, patientsCreateCmd)
+	patientTypesCmd.AddCommand(patientTypesListCmd, patientTypesGetCmd)
 
 	rootCmd.AddCommand(
 		authCmd,
@@ -328,6 +389,7 @@ func main() {
 		bookingTypesCmd,
 		usersCmd,
 		patientsCmd,
+		patientTypesCmd,
 	)
 
 	if err := rootCmd.Execute(); err != nil {
