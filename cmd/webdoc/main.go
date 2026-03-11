@@ -260,12 +260,67 @@ func main() {
 		},
 	}
 
+	patientsCreateCmd := &cobra.Command{
+		Use:   "create",
+		Short: "Create a new patient",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := httpclient.FromConfig(apiURLFlag)
+			if err != nil {
+				return err
+			}
+
+			personalNumber, _ := cmd.Flags().GetString("personal-number")
+			clinicName, _ := cmd.Flags().GetString("clinic-name")
+			clinicHsaID, _ := cmd.Flags().GetString("clinic-hsa-id")
+			countyName, _ := cmd.Flags().GetString("county-name")
+			patientType, _ := cmd.Flags().GetString("patient-type")
+			email, _ := cmd.Flags().GetString("email")
+			mobile, _ := cmd.Flags().GetString("mobile")
+
+			req := api.CreatePatientRequest{
+				PersonalNumber: personalNumber,
+				ListInfo: api.CreatePatientListInfo{
+					Name:       clinicName,
+					HsaID:      clinicHsaID,
+					CountyName: countyName,
+				},
+				PatientType:  patientType,
+				Email:        email,
+				MobileNumber: mobile,
+			}
+
+			patient, err := api.CreatePatient(client, req)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("Patient created: %s\n", patient.ID)
+			fmt.Printf("  %s %s  (%s)\n", patient.FirstName, patient.LastName, patient.PersonalNumber)
+			fmt.Printf("  Patient type: %s\n", patient.PatientType)
+
+			return nil
+		},
+	}
+
+	patientsCreateCmd.Flags().String("personal-number", "", "Personal number (required)")
+	patientsCreateCmd.Flags().String("clinic-name", "", "Listed clinic name (required)")
+	patientsCreateCmd.Flags().String("clinic-hsa-id", "", "Listed clinic HSA ID (required)")
+	patientsCreateCmd.Flags().String("county-name", "", "County name (required)")
+	patientsCreateCmd.Flags().String("patient-type", "", "Patient type name, e.g. Private (required)")
+	patientsCreateCmd.Flags().String("email", "", "Email address")
+	patientsCreateCmd.Flags().String("mobile", "", "Mobile number")
+	patientsCreateCmd.MarkFlagRequired("personal-number")
+	patientsCreateCmd.MarkFlagRequired("clinic-name")
+	patientsCreateCmd.MarkFlagRequired("clinic-hsa-id")
+	patientsCreateCmd.MarkFlagRequired("county-name")
+	patientsCreateCmd.MarkFlagRequired("patient-type")
+
 	// -- assemble tree ------------------------------------------------------
 	authCmd.AddCommand(loginCmd, authStatusCmd)
 	configCmd.AddCommand(setAuthURLCmd, setAPIURLCmd, showConfigCmd)
 	bookingTypesCmd.AddCommand(bookingTypesList)
 	usersCmd.AddCommand(usersSearchCmd)
-	patientsCmd.AddCommand(patientsSearchCmd)
+	patientsCmd.AddCommand(patientsSearchCmd, patientsCreateCmd)
 
 	rootCmd.AddCommand(
 		authCmd,
