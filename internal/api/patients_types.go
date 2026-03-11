@@ -106,7 +106,7 @@ type CreatedPatient struct {
 	ListInfo            CreatedPatientListInfo `json:"listInfo"`
 	PatientType         string                 `json:"patientType"`
 	Nationality         string                 `json:"nationality"`
-	InterpreterNeed     string                 `json:"interpreterNeed"`
+	InterpreterNeed     bool                   `json:"interpreterNeed"`
 	InterpreterLanguage string                 `json:"interpreterLanguage"`
 	RegisterAsOf        string                 `json:"registerAsOf"`
 }
