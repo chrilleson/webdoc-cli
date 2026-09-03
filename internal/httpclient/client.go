@@ -60,6 +60,16 @@ func Patch[T any](c *Client, path string, body any) (T, error) {
 	return sendJSON[T](c, http.MethodPatch, path, body)
 }
 
+func Put[T any](c *Client, path string, body any) (T, error) {
+	return sendJSON[T](c, http.MethodPut, path, body)
+}
+
+// Delete sends a DELETE. Pass nil for body when the endpoint takes none —
+// some Webdoc DELETEs (e.g. /v1/bookings/:id) require a JSON body.
+func Delete[T any](c *Client, path string, body any) (T, error) {
+	return sendJSON[T](c, http.MethodDelete, path, body)
+}
+
 func PostMultipart[T any](c *Client, path string, contentType string, body io.Reader) (T, error) {
 	var zero T
 
@@ -75,16 +85,22 @@ func PostMultipart[T any](c *Client, path string, contentType string, body io.Re
 func sendJSON[T any](c *Client, method, path string, body any) (T, error) {
 	var zero T
 
-	data, err := json.Marshal(body)
-	if err != nil {
-		return zero, fmt.Errorf("serialising request body: %w", err)
+	var payload io.Reader
+	if body != nil {
+		data, err := json.Marshal(body)
+		if err != nil {
+			return zero, fmt.Errorf("serialising request body: %w", err)
+		}
+		payload = bytes.NewReader(data)
 	}
 
-	req, err := http.NewRequest(method, c.baseURL+path, bytes.NewReader(data))
+	req, err := http.NewRequest(method, c.baseURL+path, payload)
 	if err != nil {
 		return zero, fmt.Errorf("building request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	if payload != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	return do[T](c, req)
 }

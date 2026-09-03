@@ -13,6 +13,7 @@ type Config struct {
 	BaseURL     string    `json:"base_url"`
 	AuthURL     string    `json:"auth_url"`
 	APIURL      string    `json:"api_url"`
+	ClinicID    string    `json:"clinic_id,omitempty"`
 	AccessToken string    `json:"access_token,omitempty"`
 	TokenExpiry time.Time `json:"token_expiry,omitempty"`
 }
@@ -85,6 +86,16 @@ func ResolveAPIURL(flagValue string, cfg *Config) (string, error) {
 		return "", errors.New("no API URL configured - run `webdoc config set-api-url <url>`")
 	}
 	return resolvedAuthURL, nil
+}
+
+func ResolveClinicID(flagValue string, cfg *Config) (string, error) {
+	if flagValue != "" {
+		return flagValue, nil
+	}
+	if cfg.ClinicID != "" {
+		return cfg.ClinicID, nil
+	}
+	return "", errors.New("no clinic ID given - pass --clinic-id <id> or run `webdoc config set-clinic-id <id>`")
 }
 
 func ResolveURL(url, flagValue string) (string, error) {
