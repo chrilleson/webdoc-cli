@@ -41,15 +41,29 @@ func ListRecordTemplates(c *httpclient.Client) ([]RecordTemplate, error) {
 	return httpclient.Get[[]RecordTemplate](c, "/v1/recordTemplates", nil)
 }
 
-// GetRecordTemplate fetches one template. The endpoint returns a single-element
-// JSON array rather than an object.
+// GetRecordTemplate fetches one template. The published docs show this endpoint
+// returning a single-element array, but the live API returns a bare object, so
+// accept either shape.
 func GetRecordTemplate(c *httpclient.Client, templateID string) (RecordTemplate, error) {
-	templates, err := httpclient.Get[[]RecordTemplate](c, "/v1/recordTemplates/"+templateID, nil)
+	raw, err := httpclient.Get[json.RawMessage](c, "/v1/recordTemplates/"+templateID, nil)
 	if err != nil {
 		return RecordTemplate{}, err
 	}
-	if len(templates) == 0 {
+	if len(raw) == 0 {
 		return RecordTemplate{}, fmt.Errorf("record template %s not found", templateID)
 	}
-	return templates[0], nil
+
+	var one RecordTemplate
+	if err := json.Unmarshal(raw, &one); err == nil {
+		return one, nil
+	}
+
+	var many []RecordTemplate
+	if err := json.Unmarshal(raw, &many); err != nil {
+		return RecordTemplate{}, fmt.Errorf("decoding record template: %w", err)
+	}
+	if len(many) == 0 {
+		return RecordTemplate{}, fmt.Errorf("record template %s not found", templateID)
+	}
+	return many[0], nil
 }
