@@ -40,11 +40,44 @@ webdoc-cli/
 └── README.md
 ```
 
-## Setup
+## Install
+
+Install the binary onto your `PATH` so `webdoc` works from any directory:
 
 ```bash
 go mod tidy
+go install ./cmd/webdoc
+```
+
+That puts `webdoc` in `$(go env GOPATH)/bin` (usually `~/go/bin`). Add that
+directory to your `PATH` if it is not already there:
+
+```fish
+# fish - persists to $fish_user_paths, run once
+fish_add_path ~/go/bin
+```
+
+```bash
+# bash / zsh - add to ~/.bashrc or ~/.zshrc
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+Verify with `which webdoc && webdoc --help`.
+
+`go install` compiles the source as it is at that moment — after pulling or
+merging changes, re-run it to pick them up:
+
+```bash
+go install -C /path/to/webdoc-cli ./cmd/webdoc
+```
+
+### Building without installing
+
+To produce a binary in the working directory instead (it is gitignored):
+
+```bash
 go build -o webdoc ./cmd/webdoc
+./webdoc --help
 ```
 
 ## Getting started
